@@ -33,7 +33,7 @@ class CUHK03(ImageDataset):
     ):
         self.root = osp.abspath(osp.expanduser(root))
         self.dataset_dir = osp.join(self.root, self.dataset_dir)
-        self.download_dataset(self.dataset_dir, self.dataset_url)
+        #self.download_dataset(self.dataset_dir, self.dataset_url)
 
         self.data_dir = osp.join(self.dataset_dir, 'cuhk03_release')
         self.raw_mat_path = osp.join(self.data_dir, 'cuhk-03.mat')
@@ -63,12 +63,12 @@ class CUHK03(ImageDataset):
         )
 
         required_files = [
-            self.dataset_dir, self.data_dir, self.raw_mat_path,
+            self.dataset_dir,
             self.split_new_det_mat_path, self.split_new_lab_mat_path
         ]
         self.check_before_run(required_files)
 
-        self.preprocess_split()
+        #self.preprocess_split()
 
         if cuhk03_labeled:
             split_path = self.split_classic_lab_json_path if cuhk03_classic_split else self.split_new_lab_json_path

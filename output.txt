@@ -1,0 +1,41 @@
+Building train transforms ...
++ resize to 224x224
++ random flip
++ random crop (enlarge to 252x252 and crop 224x224)
++ to torch tensor of range [0, 1]
++ normalization (mean=[0.4154, 0.3897, 0.3849], std=[0.193, 0.1865, 0.185])
+Building test transforms ...
++ resize to 224x224
++ to torch tensor of range [0, 1]
++ normalization (mean=[0.4154, 0.3897, 0.3849], std=[0.193, 0.1865, 0.185])
+=> Loading train (source) dataset
+=> Loaded Market1501
+  ----------------------------------------
+  subset   | # ids | # images | # cameras
+  ----------------------------------------
+  train    |   751 |    12936 |         6
+  query    |   750 |     3368 |         6
+  gallery  |   751 |    15913 |         6
+  ----------------------------------------
+=> Loading test (target) dataset
+=> Loaded Market1501
+  ----------------------------------------
+  subset   | # ids | # images | # cameras
+  ----------------------------------------
+  train    |   751 |    12936 |         6
+  query    |   750 |     3368 |         6
+  gallery  |   751 |    15913 |         6
+  ----------------------------------------
+
+
+  **************** Summary ****************
+  source            : ['market1501']
+  # source datasets : 1
+  # source ids      : 751
+  # source images   : 12936
+  # source cameras  : 6
+  target            : ['market1501']
+  *****************************************
+
+
+=> Start training

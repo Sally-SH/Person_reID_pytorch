@@ -7,10 +7,11 @@ from utils.torchtools import load_pretrained_weights
 
 datamanager = ImageDataManager(
     root='reid-data',
-    sources='cuhk03',
-    targets='cuhk03',
-    height=384,
-    width=128,
+    sources='market1501',
+    targets='market1501',
+    height=224,
+    width=224,
+    transforms=['random_flip', 'random_crop'],
     batch_size_train=10,
     batch_size_test=10,
     norm_mean=[0.4154, 0.3897, 0.3849],
@@ -18,25 +19,24 @@ datamanager = ImageDataManager(
 )
 
 model = build_model(
-    name='pcb',
+    name='alignedReID',
     num_classes=datamanager.num_train_pids,
-    loss='softmax',
     pretrained=True
 )
 
 model = model.cuda()
-#load_pretrained_weights(model,"./log/pcb/model/model.pth.tar-60")
+load_pretrained_weights(model,"./log/aligned/aligned_market/model.pth.tar-70")
 
 optimizer = build_optimizer(
     model,
-    optim='sgd',
-    lr=0.1
+    optim='adam',
+    lr=0.00001
 )
 
 scheduler = build_lr_scheduler(
     optimizer,
-    lr_scheduler='single_step',
-    stepsize=40,
+    lr_scheduler='multi_step',
+    stepsize=[40,70],
     gamma=0.1
 )
 
@@ -45,13 +45,17 @@ engine = Engine(
     model,
     optimizer=optimizer,
     scheduler=scheduler,
+    criterion='aligned'
 )
 
 engine.run(
-    save_dir='log/pcb',
-    max_epoch=60,
+    save_dir='log/aligned',
+    max_epoch=80,
     eval_freq=10,
-    print_freq=10,
+    print_freq=20,
     test_only=False,
-    save_name='pcb_cuhk03'
+    save_name='aligned_market',
+    normalize_feature=True,
+    rerank=True,
+    start_epoch=70
 )

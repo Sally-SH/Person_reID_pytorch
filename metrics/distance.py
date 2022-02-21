@@ -1,6 +1,7 @@
 from __future__ import division, print_function, absolute_import
 import torch
 from torch.nn import functional as F
+import numpy as np
 
 
 def compute_distance_matrix(input1, input2, metric='euclidean'):
@@ -54,6 +55,7 @@ def euclidean_squared_distance(input1, input2):
     mat2 = torch.pow(input2, 2).sum(dim=1, keepdim=True).expand(n, m).t()
     distmat = mat1 + mat2
     distmat.addmm_(input1, input2.t(), beta=1, alpha=-2)
+    distmat = distmat.clamp(min=1e-12).sqrt()
     return distmat
 
 
@@ -71,3 +73,13 @@ def cosine_distance(input1, input2):
     input2_normed = F.normalize(input2, p=2, dim=1)
     distmat = 1 - torch.mm(input1_normed, input2_normed.t())
     return distmat
+
+# def normalize(x, axis=-1):
+#   """Normalizing to unit length along the specified dimension.
+#   Args:
+#     x: pytorch Variable
+#   Returns:
+#     x: pytorch Variable, same shape as input      
+#   """
+#   x = 1. * x / (torch.norm(x, 2, axis, keepdim=True).expand_as(x) + 1e-12)
+#   return x

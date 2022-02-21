@@ -13,6 +13,8 @@ from metrics.rank import evaluate_rank
 from utils import (
     MetricMeter, AverageMeter, re_ranking, save_checkpoint,
     visualize_ranked_results)
+from losses.alignedReID_losses import aligned_loss
+from losses.mgn_loss import MGNLoss
 
 
 class Engine(object):
@@ -24,7 +26,22 @@ class Engine(object):
         use_gpu (bool, optional): use gpu. Default is True.
     """
 
-    def __init__(self, datamanager, model, optimizer, scheduler=None, use_gpu=True):
+    criterion_factory = {
+    # image classification models
+    'cross_entropy': torch.nn.CrossEntropyLoss(),
+    'aligned': aligned_loss,
+    'mgn': MGNLoss()
+    }
+
+    def __init__(
+            self, 
+            datamanager, 
+            model, 
+            optimizer, 
+            scheduler=None, 
+            use_gpu=True, 
+            criterion = 'cross_entropy'
+        ):
         self.datamanager = datamanager
         self.train_loader = self.datamanager.train_loader
         self.test_loader = self.datamanager.test_loader
@@ -36,7 +53,13 @@ class Engine(object):
         self.optimizer = optimizer
         self.scheduler = scheduler
 
-        self.criterion = torch.nn.CrossEntropyLoss()
+        avai_criterion = list(self.criterion_factory.keys())
+        if criterion not in avai_criterion:
+            raise KeyError(
+                'Unknown criterion: {}. Must be one of {}'.format(criterion, avai_criterion)
+            )
+        self.criterion = self.criterion_factory[criterion]
+        self.criterion_name = criterion
 
     def save_model(self, epoch, rank1, save_dir, is_best=False, name='model'):
 
@@ -174,7 +197,7 @@ class Engine(object):
         if self.writer is not None:
             self.writer.close()
 
-    def train(self, print_freq=10, fixbase_epoch=0, open_layers=None):
+    def train(self, print_freq=10):
         losses = MetricMeter()
         batch_time = AverageMeter()
         data_time = AverageMeter()
@@ -236,9 +259,24 @@ class Engine(object):
         if self.use_gpu:
             imgs = imgs.cuda()
             pids = pids.cuda()
-
-        outputs = self.model(imgs)
-        loss = self.compute_loss(self.criterion, outputs, pids)
+        
+        if self.criterion_name == 'aligned':
+            global_feat, local_feat, logits = self.model(imgs)
+            loss = self.compute_loss(
+                        self.criterion,
+                        global_feat,
+                        pids,
+                        local_feat = local_feat,
+                        logits = logits
+                    )
+            outputs = logits
+        elif self.criterion_name == 'mgn':
+            feat = self.model(imgs)
+            outputs = feat[3]
+            loss = self.compute_loss(self.criterion, feat, pids)
+        else:
+            outputs = self.model(imgs)
+            loss = self.compute_loss(self.criterion, outputs, pids)
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -385,14 +423,14 @@ class Engine(object):
 
         return cmc[0], mAP
 
-    def compute_loss(self, criterion, outputs, targets):
-        if isinstance(outputs, (tuple, list)):
+    def compute_loss(self, criterion, outputs, targets, **kwargs):
+        if self.criterion_name != 'mgn' and isinstance(outputs, (tuple, list)):
             loss = 0.
             for x in outputs:
-                loss += criterion(x, targets)
+                loss += criterion(x, targets, **kwargs)
             loss /= len(outputs)
         else:
-            loss = criterion(outputs, targets)
+            loss = criterion(outputs, targets, **kwargs)
         return loss
 
     def extract_features(self, input):

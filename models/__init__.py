@@ -1,10 +1,14 @@
 from __future__ import absolute_import
 
-from .pcb import *
+from .pcb_rpp import pcb
+from .alignedReID import alignedReID
+from .mgn import mgn
 
 __model_factory = {
     # image classification models
-    'pcb': pcb
+    'pcb': pcb,
+    'alignedReID': alignedReID,
+    'mgn': mgn
 }
 
 
@@ -37,7 +41,11 @@ def build_model(
         )
     if name == 'pcb':
         return pcb(num_classes=num_classes,pretrained=pretrained,*kwards)
-    
+    elif name == 'alignedReID':
+        return alignedReID(num_classes=num_classes, pretrained=pretrained)
+    elif name == 'mgn':
+        return mgn(num_classes)
+
     return __model_factory[name](
         num_classes=num_classes,
         loss=loss,

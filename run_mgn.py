@@ -7,21 +7,21 @@ from utils.torchtools import load_pretrained_weights
 
 datamanager = ImageDataManager(
     root='reid-data',
-    sources='cuhk03',
-    targets='cuhk03',
+    sources='market1501',
+    targets='market1501',
     height=384,
     width=128,
-    batch_size_train=10,
+    transforms=['random_flip'],
+    batch_size_train=5,
     batch_size_test=10,
     norm_mean=[0.4154, 0.3897, 0.3849],
     norm_std=[0.1930, 0.1865, 0.1850]
 )
 
 model = build_model(
-    name='pcb',
+    name='mgn',
     num_classes=datamanager.num_train_pids,
     loss='softmax',
-    pretrained=True
 )
 
 model = model.cuda()
@@ -30,13 +30,13 @@ model = model.cuda()
 optimizer = build_optimizer(
     model,
     optim='sgd',
-    lr=0.1
+    lr=0.01
 )
 
 scheduler = build_lr_scheduler(
     optimizer,
-    lr_scheduler='single_step',
-    stepsize=40,
+    lr_scheduler='multi_step',
+    stepsize=[40, 60],
     gamma=0.1
 )
 
@@ -45,13 +45,14 @@ engine = Engine(
     model,
     optimizer=optimizer,
     scheduler=scheduler,
+    criterion='mgn'
 )
 
 engine.run(
-    save_dir='log/pcb',
-    max_epoch=60,
+    save_dir='log/mgn',
+    max_epoch=80,
     eval_freq=10,
     print_freq=10,
     test_only=False,
-    save_name='pcb_cuhk03'
+    save_name='mgn_market'
 )
