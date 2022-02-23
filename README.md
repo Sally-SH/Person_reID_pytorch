@@ -89,6 +89,6 @@ engine.run(
 - [DukeMTMC-reID](https://arxiv.org/abs/1701.07717)
 ---
 ## Models
-- [PCB](https://arxiv.org/abs/1711.09349)
+- [PCB+RPP](https://arxiv.org/abs/1711.09349)
 - [AlignedReID](https://arxiv.org/pdf/1711.08184v2.pdf)
 - [MGN](https://arxiv.org/pdf/1804.01438)
