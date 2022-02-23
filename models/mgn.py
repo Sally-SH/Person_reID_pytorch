@@ -69,7 +69,7 @@ class MGN(nn.Module):
         res_g_conv5 = resnet.layer4
 
         res_p_conv5 = nn.Sequential(
-            Bottleneck(1024, 512, downsample=nn.Sequential(nn.Conv2d(1024, 2048, 1, bias=False), nn.BatchNorm2d(2048))),
+            Bottleneck(1024, 512),
             Bottleneck(2048, 512),
             Bottleneck(2048, 512))
         res_p_conv5.load_state_dict(resnet.layer4.state_dict())

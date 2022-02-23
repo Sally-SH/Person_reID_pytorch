@@ -1,7 +1,7 @@
 from __future__ import print_function, absolute_import
 import torch
 
-OPTIMS = ['adam', 'sgd']
+OPTIMS = ['adam', 'sgd', 'sgd_rpp']
 
 def build_optimizer(
     model,
@@ -47,6 +47,15 @@ def build_optimizer(
     elif optim == 'sgd':
         optimizer = torch.optim.SGD(
             param_groups,
+            lr=lr,
+            momentum=momentum,
+            weight_decay=weight_decay,
+            dampening=sgd_dampening,
+            nesterov=sgd_nesterov,
+        )
+    elif optim == 'sgd_rpp':
+        optimizer = torch.optim.SGD(
+            model.parts_avgpool.parameters(),
             lr=lr,
             momentum=momentum,
             weight_decay=weight_decay,

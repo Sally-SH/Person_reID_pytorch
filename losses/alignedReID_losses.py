@@ -57,32 +57,6 @@ def normalize(x, axis=-1):
     return x
 
 
-def compute_dist(array1, array2, type='euclidean'):
-    """Compute the euclidean or cosine distance of all pairs.
-  Args:
-    array1: numpy array with shape [m1, n]
-    array2: numpy array with shape [m2, n]
-    type: one of ['cosine', 'euclidean']
-  Returns:
-    numpy array with shape [m1, m2]
-  """
-    assert type in ['cosine', 'euclidean']
-    if type == 'cosine':
-        array1 = normalize(array1, axis=1)
-        array2 = normalize(array2, axis=1)
-        dist = np.matmul(array1, array2.T)
-        return dist
-    else:
-        # shape [m1, 1]
-        square1 = np.sum(np.square(array1), axis=1)[..., np.newaxis]
-        # shape [1, m2]
-        square2 = np.sum(np.square(array2), axis=1)[np.newaxis, ...]
-        squared_dist = - 2 * np.matmul(array1, array2.T) + square1 + square2
-        squared_dist[squared_dist < 0] = 0
-        dist = np.sqrt(squared_dist)
-        return dist
-
-
 def shortest_dist(dist_mat):
     """Parallel version.
   Args:
@@ -115,69 +89,6 @@ def shortest_dist(dist_mat):
     # dist = dist[-1, -1]
     dist = dist[-1, -1].copy()
     return dist
-
-def unaligned_dist(dist_mat):
-    """Parallel version.
-    Args:
-      dist_mat: numpy array, available shape
-        1) [m, n]
-        2) [m, n, N], N is batch size
-        3) [m, n, *], * can be arbitrary additional dimensions
-    Returns:
-      dist: three cases corresponding to `dist_mat`
-        1) scalar
-        2) numpy array, with shape [N]
-        3) numpy array with shape [*]
-    """
-
-    m = dist_mat.shape[0]
-    dist = np.zeros_like(dist_mat[0])
-    for i in range(m):
-        dist[i] = dist_mat[i][i]
-    dist = np.sum(dist, axis=0).copy()
-    return dist
-
-
-def meta_local_dist(x, y, aligned):
-    """
-  Args:
-    x: numpy array, with shape [m, d]
-    y: numpy array, with shape [n, d]
-  Returns:
-    dist: scalar
-  """
-    eu_dist = compute_dist(x, y, 'euclidean')
-    dist_mat = (np.exp(eu_dist) - 1.) / (np.exp(eu_dist) + 1.)
-    if aligned:
-        dist = shortest_dist(dist_mat[np.newaxis])[0]
-    else:
-        dist = unaligned_dist(dist_mat[np.newaxis])[0]
-    return dist
-
-
-def parallel_local_dist(x, y, aligned):
-    """Parallel version.
-  Args:
-    x: numpy array, with shape [M, m, d]
-    y: numpy array, with shape [N, n, d]
-  Returns:
-    dist: numpy array, with shape [M, N]
-  """
-    M, m, d = x.shape
-    N, n, d = y.shape
-    x = x.reshape([M * m, d])
-    y = y.reshape([N * n, d])
-    # shape [M * m, N * n]
-    dist_mat = compute_dist(x, y, type='euclidean')
-    dist_mat = (np.exp(dist_mat) - 1.) / (np.exp(dist_mat) + 1.)
-    # shape [M * m, N * n] -> [M, m, N, n] -> [m, n, M, N]
-    dist_mat = dist_mat.reshape([M, m, N, n]).transpose([1, 3, 0, 2])
-    # shape [M, N]
-    if aligned:
-        dist_mat = shortest_dist(dist_mat)
-    else:
-        dist_mat = unaligned_dist(dist_mat)
-    return dist_mat
 
 
 def local_dist(x, y):
@@ -365,9 +276,6 @@ def global_loss(tri_loss, global_feat, labels, normalize_feature=True):
         dist_ap: pytorch Variable, distance(anchor, positive); shape [N]
         dist_an: pytorch Variable, distance(anchor, negative); shape [N]
         ===================
-        For Mutual Learning
-        ===================
-        dist_mat: pytorch Variable, pairwise euclidean distance; shape [N, N]
     """
     if normalize_feature:
         global_feat = normalize(global_feat, axis=-1)
@@ -410,9 +318,6 @@ def local_loss(
         dist_ap: pytorch Variable, distance(anchor, positive); shape [N]
         dist_an: pytorch Variable, distance(anchor, negative); shape [N]
         ===================
-        For Mutual Learning
-        ===================
-        dist_mat: pytorch Variable, pairwise local distance; shape [N, N]
     """
     if normalize_feature:
         local_feat = normalize(local_feat, axis=-1)

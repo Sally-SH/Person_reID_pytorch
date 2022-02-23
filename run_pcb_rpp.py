@@ -11,21 +11,23 @@ datamanager = ImageDataManager(
     targets='market1501',
     height=384,
     width=128,
-    transforms=['random_flip'],
-    batch_size_train=5,
+    batch_size_train=10,
     batch_size_test=10,
     norm_mean=[0.4154, 0.3897, 0.3849],
     norm_std=[0.1930, 0.1865, 0.1850]
 )
 
 model = build_model(
-    name='mgn',
+    name='pcb',
     num_classes=datamanager.num_train_pids,
     loss='softmax',
+    pretrained=True
 )
 
+
+model.convert_rpp()
+load_pretrained_weights(model,"./log/pcb_rpp/pcb_rpp_market/model.pth.tar-10")
 model = model.cuda()
-load_pretrained_weights(model,"./log/mgn/mgn_market/model.pth.tar-80")
 
 optimizer = build_optimizer(
     model,
@@ -35,8 +37,8 @@ optimizer = build_optimizer(
 
 scheduler = build_lr_scheduler(
     optimizer,
-    lr_scheduler='multi_step',
-    stepsize=[40, 60],
+    lr_scheduler='single_step',
+    stepsize=10,
     gamma=0.1
 )
 
@@ -45,15 +47,13 @@ engine = Engine(
     model,
     optimizer=optimizer,
     scheduler=scheduler,
-    criterion='mgn'
 )
 
 engine.run(
-    save_dir='log/mgn',
-    max_epoch=80,
+    save_dir='log/pcb_rpp',
+    max_epoch=20,
     eval_freq=10,
     print_freq=10,
-    test_only=True,
-    save_name='mgn_market',
-    rerank=True
+    test_only=False,
+    save_name='pcb_rpp_market'
 )

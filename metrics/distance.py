@@ -74,12 +74,3 @@ def cosine_distance(input1, input2):
     distmat = 1 - torch.mm(input1_normed, input2_normed.t())
     return distmat
 
-# def normalize(x, axis=-1):
-#   """Normalizing to unit length along the specified dimension.
-#   Args:
-#     x: pytorch Variable
-#   Returns:
-#     x: pytorch Variable, same shape as input      
-#   """
-#   x = 1. * x / (torch.norm(x, 2, axis, keepdim=True).expand_as(x) + 1e-12)
-#   return x

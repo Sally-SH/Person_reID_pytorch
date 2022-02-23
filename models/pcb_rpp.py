@@ -162,7 +162,7 @@ class PCB(nn.Module):
         
         return y
 
-    def add_rpp(self):
+    def convert_rpp(self):
         self.parts_avgpool = RPP(parts=self.parts)
         return self
 

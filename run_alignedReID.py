@@ -25,7 +25,7 @@ model = build_model(
 )
 
 model = model.cuda()
-load_pretrained_weights(model,"./log/aligned/aligned_market/model.pth.tar-70")
+load_pretrained_weights(model,"./log/aligned/aligned_market/model.pth.tar-80")
 
 optimizer = build_optimizer(
     model,
@@ -36,7 +36,7 @@ optimizer = build_optimizer(
 scheduler = build_lr_scheduler(
     optimizer,
     lr_scheduler='multi_step',
-    stepsize=[40,70],
+    stepsize=[40],
     gamma=0.1
 )
 
@@ -50,12 +50,12 @@ engine = Engine(
 
 engine.run(
     save_dir='log/aligned',
-    max_epoch=80,
+    max_epoch=100,
     eval_freq=10,
     print_freq=20,
     test_only=False,
     save_name='aligned_market',
     normalize_feature=True,
     rerank=True,
-    start_epoch=70
+    start_epoch=80
 )
