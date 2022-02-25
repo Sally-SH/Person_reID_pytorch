@@ -19,7 +19,7 @@ def show_avai_models():
 
 
 def build_model(
-    name, num_classes, loss='softmax', pretrained=True, use_gpu=True, *kwards):
+    name, num_classes, loss='softmax', pretrained=True, use_gpu=True, **kwargs):
     """A function wrapper for building a model.
 
     Args:
@@ -40,7 +40,7 @@ def build_model(
             'Unknown model: {}. Must be one of {}'.format(name, avai_models)
         )
     if name == 'pcb':
-        return pcb(num_classes=num_classes,pretrained=pretrained,*kwards)
+        return pcb(num_classes=num_classes,pretrained=pretrained,**kwargs)
     elif name == 'alignedReID':
         return alignedReID(num_classes=num_classes, pretrained=pretrained)
     elif name == 'mgn':

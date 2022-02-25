@@ -21,7 +21,8 @@ model = build_model(
     name='pcb',
     num_classes=datamanager.num_train_pids,
     loss='softmax',
-    pretrained=True
+    pretrained=True,
+    parts=3
 )
 
 model = model.cuda()
